@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+data/
+features/
+checkpoints/
+*.mp4
+*.npy
+*.pt
+*.pth
+.DS_Store
