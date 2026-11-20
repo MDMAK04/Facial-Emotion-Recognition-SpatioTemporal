@@ -19,52 +19,59 @@ class KeyframeSelector:
             cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
         )
 
-    def _detect_and_crop_face(self, frame_rgb: np.ndarray) -> np.ndarray:
-        if not self.crop_face:
-            return cv2.resize(frame_rgb, self.img_size)
-
-        gray = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2GRAY)
+    def _get_face_bbox(self, frame_rgb: np.ndarray) -> Tuple[int, int, int, int]:
+        """Détecte la zone du visage sur une image réduite (ultra-rapide)."""
+        h, w, _ = frame_rgb.shape
+        scale = 0.25  # Détection sur image 4x plus petite -> 16x plus rapide
+        small_gray = cv2.cvtColor(
+            cv2.resize(frame_rgb, (int(w * scale), int(h * scale))),
+            cv2.COLOR_RGB2GRAY
+        )
         faces = self.face_cascade.detectMultiScale(
-            gray, scaleFactor=1.1, minNeighbors=5, minSize=(60, 60)
+            small_gray, scaleFactor=1.1, minNeighbors=4, minSize=(20, 20)
         )
 
         if len(faces) > 0:
-            x, y, w, h = max(faces, key=lambda b: b[2] * b[3])
-            margin_w = int(0.15 * w)
-            margin_h = int(0.15 * h)
-            x1 = max(0, x - margin_w)
-            y1 = max(0, y - margin_h)
-            x2 = min(frame_rgb.shape[1], x + w + margin_w)
-            y2 = min(frame_rgb.shape[0], y + h + margin_h)
-            cropped = frame_rgb[y1:y2, x1:x2]
+            x, y, fw, fh = max(faces, key=lambda b: b[2] * b[3])
+            x, y, fw, fh = int(x / scale), int(y / scale), int(fw / scale), int(fh / scale)
+            margin_w = int(0.15 * fw)
+            margin_h = int(0.15 * fh)
+            return (
+                max(0, x - margin_w),
+                max(0, y - margin_h),
+                min(w, x + fw + margin_w),
+                min(h, y + fh + margin_h)
+            )
         else:
-            h, w, _ = frame_rgb.shape
-            center_x, center_y = w // 2, h // 2
             size = min(h, w) // 2
-            cropped = frame_rgb[
-                max(0, center_y - size):min(h, center_y + size),
-                max(0, center_x - size):min(w, center_x + size)
-            ]
-
-        return cv2.resize(cropped, self.img_size)
+            cx, cy = w // 2, h // 2
+            return (max(0, cx - size), max(0, cy - size), min(w, cx + size), min(h, cy + size))
 
     def extract_keyframes(self, video_path: str) -> Tuple[np.ndarray, dict]:
         cap = cv2.VideoCapture(video_path)
         raw_frames = []
+        bbox = None
 
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            processed_frame = self._detect_and_crop_face(frame_rgb)
-            raw_frames.append(processed_frame)
+            if self.crop_face:
+                if bbox is None:
+                    bbox = self._get_face_bbox(frame_rgb)
+                x1, y1, x2, y2 = bbox
+                cropped = frame_rgb[y1:y2, x1:x2]
+            else:
+                cropped = frame_rgb
+            raw_frames.append(cv2.resize(cropped, self.img_size))
         cap.release()
 
         total_frames = len(raw_frames)
         if total_frames == 0:
             raise ValueError(f"Impossible de lire la vidéo : {video_path}")
 
+        # Filtrage de redondance par SSIM
         non_redundant_frames = [raw_frames[0]]
         last_gray = cv2.cvtColor(raw_frames[0], cv2.COLOR_RGB2GRAY)
 
