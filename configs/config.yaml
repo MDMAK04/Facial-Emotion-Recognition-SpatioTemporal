@@ -1,25 +1,27 @@
 dataset:
-  train_actors_max: 19       # Acteurs 01-19 Train (80%), Acteurs 20-24 Val/Test (20%)
+  raw_dir: "data/ravdess"
+  cache_dir: "data/processed"
+  train_actors_max: 19       # Acteurs 01-19 (Train) | Acteurs 20-24 (Val)
   img_size: [128, 128]
-  num_classes: 8
-
-keyframe_selection:
-  ssim_threshold: 0.90       # Élimine les frames consécutives trop similaires
-  target_frames: 16          # Longueur fixe T de la séquence vidéo
+  ssim_threshold: 0.90
+  target_frames: 16
   crop_face: true
 
-spatial_model:
-  backbone: "vgg16"          
+spatial:
+  backbone: "vgg16"
   feature_dim: 512
-  batch_size: 32
-  epochs: 20
-  learning_rate: 0.0001
+  num_classes: 8
+  freeze_early_layers: true
+  batch_size: 64
+  epochs: 15
+  lr: 0.0001
+  weight_decay: 0.0001
 
-sequence_models:
-  architectures: ["rnn", "lstm", "gru", "transformer"]
+temporal:
   hidden_dim: 128
   num_layers: 2
   dropout: 0.3
   batch_size: 32
-  epochs: 40
-  learning_rate: 0.0005
+  epochs: 30
+  lr: 0.001
+  models: ["rnn", "lstm", "gru", "transformer"]

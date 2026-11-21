@@ -1,57 +1,59 @@
 import os
 import glob
 import pandas as pd
-from pathlib import Path
 
 EMOTION_MAP = {
-    "01": "neutral",
-    "02": "calm",
-    "03": "happy",
-    "04": "sad",
-    "05": "angry",
-    "06": "fearful",
-    "07": "disgust",
-    "08": "surprised"
+    "01": 0,  # neutral
+    "02": 1,  # calm
+    "03": 2,  # happy
+    "04": 3,  # sad
+    "05": 4,  # angry
+    "06": 5,  # fearful
+    "07": 6,  # disgust
+    "08": 7,  # surprised
 }
 
-LABEL_TO_IDX = {v: i for i, v in enumerate(EMOTION_MAP.values())}
-IDX_TO_LABEL = {i: v for i, v in enumerate(EMOTION_MAP.values())}
+EMOTION_LABELS = [
+    "neutral", "calm", "happy", "sad",
+    "angry", "fearful", "disgust", "surprised"
+]
 
-def parse_ravdess_directory(root_dir: str, train_actors_max: int = 19) -> pd.DataFrame:
-    video_paths = glob.glob(os.path.join(root_dir, "**", "*.mp4"), recursive=True)
+def parse_ravdess_directory(data_dir: str, train_actors_max: int = 19) -> pd.DataFrame:
+    video_files = sorted(glob.glob(os.path.join(data_dir, "**", "*.mp4"), recursive=True))
     records = []
 
-    for path in sorted(video_paths):
-        filename = Path(path).stem
-        parts = filename.split("-")
+    for path in video_files:
+        fname = os.path.basename(path).replace(".mp4", "")
+        parts = fname.split("-")
         if len(parts) != 7:
             continue
 
-        modality, vocal_channel, emotion_code, intensity, statement, repetition, actor = parts
+        modality, vocal_channel, emotion, intensity, statement, repetition, actor = parts
 
-        if vocal_channel != "01" or modality not in ["01", "02"]:
+        # On ne garde que les vidéos parlées (vocal_channel == '01') avec image ('01' ou '02')
+        if vocal_channel != "01" or modality not in ("01", "02"):
+            continue
+        if emotion not in EMOTION_MAP:
             continue
 
         actor_id = int(actor)
-        emotion_name = EMOTION_MAP[emotion_code]
-        split = "train" if actor_id <= train_actors_max else "val"
+        # Clé unique d'enregistrement (évite tout doublon entre Full-AV '01' et Video-only '02')
+        clip_uid = f"{vocal_channel}-{emotion}-{intensity}-{statement}-{repetition}-{actor}"
 
         records.append({
-            "video_path": path,
-            "filename": filename,
+            "clip_uid": clip_uid,
             "modality": modality,
-            "emotion_code": emotion_code,
-            "emotion": emotion_name,
-            "label": LABEL_TO_IDX[emotion_name],
-            "intensity": "normal" if intensity == "01" else "strong",
-            "statement": int(statement),
-            "repetition": int(repetition),
+            "video_path": path,
             "actor_id": actor_id,
-            "split": split
+            "label": EMOTION_MAP[emotion],
+            "emotion": EMOTION_LABELS[EMOTION_MAP[emotion]],
+            "split": "train" if actor_id <= train_actors_max else "val"
         })
 
     df = pd.DataFrame(records)
-    print(f"Total vidéos chargées : {len(df)}")
-    print(f"Train (Acteurs 01-{train_actors_max}) : {len(df[df['split']=='train'])} vidéos")
-    print(f"Val   (Acteurs {train_actors_max+1}-24) : {len(df[df['split']=='val'])} vidéos")
+    if df.empty:
+        raise FileNotFoundError(f"Aucune vidéo RAVDESS trouvée dans : {data_dir}")
+
+    # Priorité à la modalité '01' (Full-AV) s'il y a doublon avec '02' (Video-only)
+    df = df.sort_values("modality").drop_duplicates(subset=["clip_uid"], keep="first").reset_index(drop=True)
     return df
