@@ -10,7 +10,7 @@ L'objectif principal est de démontrer l'apport de la modélisation temporelle (
 
 1. **Prétraitement & Extraction de Keyframes (`src/dataset_parser.py`, `src/keyframe_selector.py`) :**
    * Extraction uniforme de **16 images clés (*keyframes*)** par vidéo, recadrées sur le visage et redimensionnées en `128 × 128 × 3`.
-   * Classification sur les **8 émotions** du dataset RAVDESS : `neutral`, `calm`, `happy`, `sad`, `angry`, `fearful`, `disgust`, `surprised`[cite: 2].
+   * Classification sur les **8 émotions** du dataset RAVDESS : `neutral`, `calm`, `happy`, `sad`, `angry`, `fearful`, `disgust`, `surprised`.
 
 2. **Stage 1 — Extracteur Spatial (`src/spatial_extractor.py`) :**
    * Fine-tuning d'un réseau convolutif **VGG16** pré-entraîné pour extraire des représentations spatiales discriminantes à partir de chaque frame individuelle.
@@ -36,7 +36,7 @@ Afin de garantir une réelle capacité de généralisation sur de nouveaux visag
 
 ## 📊 Résultats Comparatifs (Acteurs 20–24)
 
-Les métriques complètes sont également disponibles dans le fichier [`results/benchmark_results.csv`](results/benchmark_results.csv)[cite: 7].
+Les métriques complètes sont également disponibles dans le fichier [`results/benchmark_results.csv`](results/benchmark_results.csv) .
 
 | Modèle (Architecture) | Accuracy (%) | F1-Macro (%) | Precision (%) | Recall (%) |
 | :--- | :---: | :---: | :---: | :---: |
@@ -46,8 +46,8 @@ Les métriques complètes sont également disponibles dans le fichier [`results/
 | **VGG16 + RNN** | 60.33% | 57.56% | 63.32% | 59.06% |
 
 ### 🔍 Analyse des Performances
-* **Supériorité de `VGG16 + GRU` :** L'architecture **GRU** obtient les meilleurs scores sur l'ensemble des métriques (**62.33 % d'Accuracy** et **59.71 % de F1-Macro**)[cite: 2]. Son mécanisme à deux portes (*reset* et *update*) capture efficacement la dynamique temporelle des expressions faciales sur 16 frames sans sur-paramétrer le modèle.
-* **Analyse par émotion :** Les expressions à forte signature visuelle comme **`happy` (92.5 %)**, **`calm` (82.5 %)**, **`angry` (70.0 %)** et **`disgust` (67.5 %)** sont très bien reconnues[cite: 2]. Les principales confusions concernent des émotions visuellement proches en l'absence du signal audio (`neutral` vs `calm`, et `fearful` vs `surprised`)[cite: 2].
+* **Supériorité de `VGG16 + GRU` :** L'architecture **GRU** obtient les meilleurs scores sur l'ensemble des métriques (**62.33 % d'Accuracy** et **59.71 % de F1-Macro**)  : 2]. Son mécanisme à deux portes (*reset* et *update*) capture efficacement la dynamique temporelle des expressions faciales sur 16 frames sans sur-paramétrer le modèle.
+* **Analyse par émotion :** Les expressions à forte signature visuelle comme **`happy` (92.5 %)**, **`calm` (82.5 %)**, **`angry` (70.0 %)** et **`disgust` (67.5 %)** sont très bien reconnues  : 2]. Les principales confusions concernent des émotions visuellement proches en l'absence du signal audio (`neutral` vs `calm`, et `fearful` vs `surprised`)  : 2].
 
 ---
 
@@ -63,16 +63,16 @@ Les métriques complètes sont également disponibles dans le fichier [`results/
 
 ## 💾 Modèles Pré-entraînés & Cache Google Drive
 
-En raison de la limite de taille des fichiers sur GitHub, les poids entraînés PyTorch (`.pth`) ainsi que les séquences latentes extraites (`.npy`) sont hébergés sur Google Drive[cite: 6] :
+En raison de la limite de taille des fichiers sur GitHub, les poids entraînés PyTorch (`.pth`) ainsi que les séquences latentes extraites (`.npy`) sont hébergés sur Google Drive  : 6] :
 
 👉 **[Télécharger les poids pré-entraînés et le cache (`RAVDESS_cache`)](https://drive.google.com/drive/folders/1IJmvKI47iA6ikUNQ5xC9-DpCYdb7z5UO?usp=sharing)**
 
 Contenu du dossier partagé :
-* `best_spatial_vgg16.pth` — Poids du modèle spatial Stage 1 (VGG16)[cite: 6]
-* `best_vgg16_gru.pth` — Poids du meilleur modèle spatio-temporel (**62.33 % Accuracy**)[cite: 2, 6]
-* `best_vgg16_transformer.pth` — Poids du modèle VGG16 + Transformer[cite: 6]
-* `best_vgg16_lstm.pth` — Poids du modèle VGG16 + LSTM[cite: 6]
-* `best_vgg16_rnn.pth` — Poids du modèle VGG16 + RNN[cite: 6]
+* `best_spatial_vgg16.pth` — Poids du modèle spatial Stage 1 (VGG16)  : 6]
+* `best_vgg16_gru.pth` — Poids du meilleur modèle spatio-temporel (**62.33 % Accuracy**)  : 2, 6]
+* `best_vgg16_transformer.pth` — Poids du modèle VGG16 + Transformer  : 6]
+* `best_vgg16_lstm.pth` — Poids du modèle VGG16 + LSTM  : 6]
+* `best_vgg16_rnn.pth` — Poids du modèle VGG16 + RNN  : 6]
 
 ---
 
