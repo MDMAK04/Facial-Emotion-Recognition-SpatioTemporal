@@ -1,0 +1,5 @@
+Model,Accuracy (%),F1-Macro (%),Precision (%),Recall (%)
+VGG16 + RNN,60.33,57.56,63.32,59.06
+VGG16 + LSTM,60.33,57.84,63.64,58.75
+VGG16 + GRU,62.33,59.71,64.84,60.94
+VGG16 + TRANSFORMER,61.33,59.4,63.88,60.63
